@@ -53,7 +53,14 @@ with st.sidebar:
     st.caption(f"Form 22: {'ready' if tpl22 else 'missing'} · Form 17: {'ready' if tpl17 else 'missing'}")
 
     st.subheader("Claude")
-    api_key = st.text_input("Anthropic API key", value=secret("ANTHROPIC_API_KEY"), type="password")
+    configured_key = secret("ANTHROPIC_API_KEY")
+    key_override = st.text_input(
+        "Anthropic API key override (leave blank to use the one configured in Secrets)",
+        value="", type="password",
+    )
+    api_key = key_override or configured_key
+    st.caption("Using key from Secrets" if (configured_key and not key_override) else
+               ("Using key entered above" if api_key else "No key configured"))
     model = st.text_input("Model", value=secret("CLAUDE_MODEL", DEFAULT_MODEL))
 
 st.title("Patents Form No. 22 & No. 17")
