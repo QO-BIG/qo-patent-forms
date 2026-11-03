@@ -4,6 +4,7 @@ Run locally:  streamlit run app.py
 """
 from __future__ import annotations
 
+import base64
 import io
 import os
 import zipfile
@@ -32,10 +33,23 @@ def secret(name: str, default: str = "") -> str:
         return os.environ.get(name, default)
 
 
-def load_bytes(uploaded, fallback: Path) -> bytes | None:
+def secret_bytes(name: str) -> bytes | None:
+    """Template stored as base64 under the [templates] table in Secrets (never committed to
+    git). Nested so Streamlit doesn't mirror it into an OS environment variable - on Windows
+    that mirroring fails outright once the value exceeds the 32767-char env var limit."""
+    try:
+        b64 = st.secrets.get("templates", {}).get(name)
+    except Exception:
+        b64 = None
+    return base64.b64decode(b64) if b64 else None
+
+
+def load_bytes(uploaded, fallback: Path, secret_name: str) -> bytes | None:
     if uploaded is not None:
         return uploaded.getvalue()
-    return fallback.read_bytes() if fallback.exists() else None
+    if fallback.exists():
+        return fallback.read_bytes()
+    return secret_bytes(secret_name)
 
 
 # ------------------------------------------------------------------ sidebar
@@ -48,8 +62,8 @@ with st.sidebar:
     st.subheader("Templates")
     up22 = st.file_uploader("Form 22 template (.docx)", type="docx", key="t22")
     up17 = st.file_uploader("Form 17 template (.docx)", type="docx", key="t17")
-    tpl22 = load_bytes(up22, TEMPLATE_DIR / "Patents Form No. 22.docx")
-    tpl17 = load_bytes(up17, TEMPLATE_DIR / "Patents Form No. 17.docx")
+    tpl22 = load_bytes(up22, TEMPLATE_DIR / "Patents Form No. 22.docx", "FORM22_TEMPLATE_B64")
+    tpl17 = load_bytes(up17, TEMPLATE_DIR / "Patents Form No. 17.docx", "FORM17_TEMPLATE_B64")
     st.caption(f"Form 22: {'ready' if tpl22 else 'missing'} · Form 17: {'ready' if tpl17 else 'missing'}")
 
     st.subheader("Claude")
