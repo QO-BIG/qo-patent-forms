@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.venv/
+.streamlit/secrets.toml
+# firm templates contain the agent's signature image; licensed fonts must not be published
+templates/*.docx
+fonts/*.ttf
+*.pdf
