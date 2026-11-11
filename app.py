@@ -66,16 +66,8 @@ with st.sidebar:
     tpl17 = load_bytes(up17, TEMPLATE_DIR / "Patents Form No. 17.docx", "FORM17_TEMPLATE_B64")
     st.caption(f"Form 22: {'ready' if tpl22 else 'missing'} · Form 17: {'ready' if tpl17 else 'missing'}")
 
-    st.subheader("Claude")
-    configured_key = secret("ANTHROPIC_API_KEY")
-    key_override = st.text_input(
-        "Anthropic API key override (leave blank to use the one configured in Secrets)",
-        value="", type="password",
-    )
-    api_key = key_override or configured_key
-    st.caption("Using key from Secrets" if (configured_key and not key_override) else
-               ("Using key entered above" if api_key else "No key configured"))
-    model = st.text_input("Model", value=secret("CLAUDE_MODEL", DEFAULT_MODEL))
+    api_key = secret("ANTHROPIC_API_KEY")
+    model = secret("CLAUDE_MODEL", DEFAULT_MODEL)
 
 st.title("Patents Form No. 22 & No. 17")
 
@@ -92,8 +84,7 @@ if sheet and st.button("Read with Claude", disabled=not api_key):
         except Exception as e:  # show API / parsing errors to the user
             st.error(f"Extraction failed: {e}")
 if sheet and not api_key:
-    st.info("Add an Anthropic API key in the sidebar to read the sheet automatically, "
-            "or fill in the fields below by hand.")
+    st.info("No Anthropic API key configured in Secrets - fill in the fields below by hand.")
 
 x = st.session_state.get("x", {})
 
